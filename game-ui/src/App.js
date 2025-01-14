@@ -41,6 +41,7 @@ function App() {
             console.log(data);
             page += 1; 
             await sleep(2000);
+            shouldFetch=false;
           }
         } catch (error) {
           console.error("Error fetching game data:", error.message);
@@ -65,6 +66,7 @@ function App() {
       img_icon_url: game.img_icon_url,
       playtime_forever: game.playtime_forever,
       metacritic: game.metacritic || "--", // Placeholder, update if needed
+      main_time: game.main_time,
     }));
   }, [data, paginationModel]);
   const rowCount = useMemo(() => data.length, [data]);
@@ -124,6 +126,13 @@ function App() {
     {
       field: "playtime_forever",
       headerName: "Played Time (minutes)",
+      width: 200,
+      align: "right",
+    },
+
+    {
+      field: "main_time",
+      headerName: "Main Story",
       width: 200,
       align: "right",
     },
