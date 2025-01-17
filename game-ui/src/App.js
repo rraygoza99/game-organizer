@@ -11,7 +11,7 @@ function App() {
   const [isLoading, setIsLoading] = useState(false);
   const [paginationModel, setPaginationModel] = React.useState({
     page: 0,
-    pageSize: 10,
+    pageSize: 100,
   });
   useEffect(() => {
     const fetchAllData = async () => {
@@ -23,7 +23,7 @@ function App() {
       while (shouldFetch) {
         try {
           const params = {
-            steamid: "76561198095181799",
+            steamid: "76561198280525761",
             format: "json",
             page
           };
@@ -40,6 +40,8 @@ function App() {
             });
             console.log(data);
             page += 1; 
+            if(page===4)
+              shouldFetch = false;
             await sleep(2000);
           }
         } catch (error) {
@@ -139,7 +141,7 @@ function App() {
         paginationMode="client" // Client-side pagination
         paginationModel={paginationModel}
         onPaginationModelChange={setPaginationModel} // Handles changes in page and pageSize
-        pageSizeOptions={[5, 10, 25]} // Page size options
+        pageSizeOptions={[5, 10, 25,100]} // Page size options
       />
     </Paper>
   );
