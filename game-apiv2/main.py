@@ -23,39 +23,36 @@ async def get_steam_games():
     try:
         steamId = request.args.get('steamid')
         page = int(request.args.get('page', 1))  # Default to page 1 if not provided
-        page_size = 10  # Batch size of 50 games
+        page_size = 20  # Batch size of 50 games
         
         if not steamId:
             return jsonify({'error': 'Missing required query parameters: Steam ID'}), 400
 
         # Get the list of games owned by the user
         games = steam.users.get_owned_games(steamId)
-
         if not games or 'games' not in games:
             return jsonify({'error': 'No games found for this Steam ID'}), 404
 
         # Pagination logic
         all_games = games['games']
-        total_games = len(all_games)
+        not_played_games = list(filter(lambda g: g['playtime_forever']<120, all_games))
+        total_games = len(not_played_games)
+        print(total_games)
         start_index = (page - 1) * page_size
         end_index = start_index + page_size
 
         if start_index >= total_games:
             return jsonify({'error': 'Page out of range'}), 404
 
-        paginated_games = all_games[start_index:end_index]
+        paginated_games = not_played_games[start_index:end_index]
 
         # Enrich paginated games with Metacritic data
         for game in paginated_games:
             appid = game['appid']
             try:
                 # Fetch game details
-                app_details = steam.apps.get_app_details(appid, "US", "metacritic")
-                userMetascore = await HowLongToBeat().async_search(game['name'])
-                for entry in userMetascore:
-                    game['main_time'] = entry.main_story
-                    game['extra_time'] = entry.main_extra
-
+                app_details = steam.apps.get_app_details(int(appid), "US", "metacritic")
+                #print(app_details[str(appid)]['data']['metacritic'])
                 # Extract the Metacritic score if available
                 if (
                     app_details and
