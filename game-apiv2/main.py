@@ -22,61 +22,48 @@ CORS(app, origins=allowed_origins)
 async def get_steam_games():
     try:
         steamId = request.args.get('steamid')
-        page = int(request.args.get('page', 1))  # Default to page 1 if not provided
-        page_size = 20  # Batch size of 50 games
-        
+        page = int(request.args.get('page', 1))
+        page_size = 20
+        include_most_played = request.args.get('mostPlayed')
+        max_time = int(request.args.get('maxTime'))
+
         if not steamId:
             return jsonify({'error': 'Missing required query parameters: Steam ID'}), 400
 
-        # Get the list of games owned by the user
         games = steam.users.get_owned_games(steamId)
         if not games or 'games' not in games:
             return jsonify({'error': 'No games found for this Steam ID'}), 404
 
-        # Pagination logic
         all_games = games['games']
-        not_played_games = list(filter(lambda g: g['playtime_forever']<120, all_games))
+        not_played_games = (
+    list(filter(lambda g: g['playtime_forever'] < max_time, all_games))
+    if include_most_played.lower() != 'true' else all_games
+)
         total_games = len(not_played_games)
-        print(total_games)
-        start_index = (page - 1) * page_size
-        end_index = start_index + page_size
+        start_index, end_index = (page - 1) * page_size, (page - 1) * page_size + page_size
 
         if start_index >= total_games:
             return jsonify({'error': 'Page out of range'}), 404
 
         paginated_games = not_played_games[start_index:end_index]
 
-        # Enrich paginated games with Metacritic data
         for game in paginated_games:
             appid = game['appid']
             try:
-                # Fetch game details
                 app_details = steam.apps.get_app_details(int(appid), "US", "metacritic")
-                #print(app_details[str(appid)]['data']['metacritic'])
-                # Extract the Metacritic score if available
-                if (
-                    app_details and
-                    str(appid) in app_details and
-                    'data' in app_details[str(appid)] and
-                    'metacritic' in app_details[str(appid)]['data']
-                ):
-                    game['metacritic'] = app_details[str(appid)]['data']['metacritic']['score']
-                else:
-                    game['metacritic'] = None  # No Metacritic score available
+                game['metacritic'] = app_details[str(appid)]['data']['metacritic']['score'] if (
+                    app_details and str(appid) in app_details and 'data' in app_details[str(appid)] and 'metacritic' in app_details[str(appid)]['data']
+                ) else None
             except Exception as e:
                 print(f"Error fetching app details for appid {appid}: {e}")
-                game['metacritic'] = None  # Handle gracefully if fetching details fails
 
-        # Construct the paginated response
-        response = {
+        return jsonify({
             'page': page,
             'page_size': page_size,
             'total_games': total_games,
             'total_pages': (total_games + page_size - 1) // page_size,
             'games': paginated_games
-        }
-
-        return jsonify(response)
+        })
     except Exception as e:
         print(f"Error fetching Steam API: {e}")
         return jsonify({'error': 'Internal Server Error'}), 500
