@@ -111,6 +111,11 @@ function App() {
       field: "metacritic",
       headerName: "Metacritic score",
       width:150,
+      sortComparator:(v1, v2)=>{
+        const score1 = v1 === '--' ? -Infinity : Number(v1);
+        const score2 = v2 === '--' ? -Infinity : Number(v2);
+        return score1 - score2;
+      },
       renderCell: (params) => {
         const score = params.value;
 
