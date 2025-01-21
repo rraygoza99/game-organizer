@@ -19,7 +19,7 @@ jobs:
     - name: Set up Node.js
       uses: actions/setup-node@v3
       with:
-        node-version: '16'  # Use a Node.js version compatible with your React app
+        node-version: '20.10.0'
 
     - name: Install dependencies (React UI)
       working-directory: ./game-ui
@@ -33,7 +33,7 @@ jobs:
     - name: Set up Python
       uses: actions/setup-python@v4
       with:
-        python-version: '3.9'  # Use the Python version compatible with your API
+        python-version: '3.12.4'
 
     - name: Install dependencies (Python API)
       working-directory: ./game-apiv2
@@ -53,4 +53,4 @@ jobs:
       uses: peaceiris/actions-gh-pages@v3
       with:
         github_token: ${{ secrets.GITHUB_TOKEN }}
-        publish_dir: ./public  # Combine the React build and API files here
+        publish_dir: ./public
