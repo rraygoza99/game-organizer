@@ -1,0 +1,56 @@
+name: Deploy Both Apps to GitHub Pages
+
+on:
+  push:
+    branches:
+      - master  # Replace with your default branch if different
+
+jobs:
+  deploy:
+    name: Deploy Both Apps to GitHub Pages
+    runs-on: ubuntu-latest
+
+    steps:
+    # Step 1: Checkout the repository
+    - name: Checkout code
+      uses: actions/checkout@v3
+
+    # Step 2: Build the React UI
+    - name: Set up Node.js
+      uses: actions/setup-node@v3
+      with:
+        node-version: '16'  # Use a Node.js version compatible with your React app
+
+    - name: Install dependencies (React UI)
+      working-directory: ./game-ui
+      run: npm install
+
+    - name: Build React App
+      working-directory: ./game-ui
+      run: npm run build
+
+    # Step 3: Prepare the Python API (Bundle for Static Serving)
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.9'  # Use the Python version compatible with your API
+
+    - name: Install dependencies (Python API)
+      working-directory: ./game-apiv2
+      run: |
+        python -m venv venv
+        source venv/bin/activate
+        pip install -r requirements.txt
+        # Add a step here to convert the API to static files (if required).
+
+    - name: Copy API Static Files
+      run: |
+        mkdir -p public/api
+        cp -R game-apiv2/public/* public/api/  # Assuming you generate static API files here
+
+    # Step 4: Deploy to GitHub Pages
+    - name: Deploy Both Apps to GitHub Pages
+      uses: peaceiris/actions-gh-pages@v3
+      with:
+        github_token: ${{ secrets.GITHUB_TOKEN }}
+        publish_dir: ./public  # Combine the React build and API files here
