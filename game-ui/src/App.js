@@ -105,7 +105,6 @@ function App() {
       main_time: game.main_time,
     }));
   }, [data, paginationModel]);
-  const rowCount = useMemo(() => data.length, [data]);
   const handleAlertClose = () => {
     setAlertOpen(false);
   };
